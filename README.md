@@ -10,7 +10,8 @@ Goal is to create a CLI tool for SOC analysts that will assist with organizing n
 2. Add TI source API keys to constants.py
 3. Run using `python3 socdocs.py`
 4. When the script is executed it will create a folder structure under this directory organized by year > month > day. 
-5. File hash, domain, and IP searches can be executed using `python3 socdocs.py -q [QUERY HERE]`
+5. Folder for specific events can be created using the `-id` tag, additionally IOC searches tagged with an ID will put the output files in that folder
+7. File hash, domain, and IP searches can be executed using `python3 socdocs.py -q [QUERY HERE]`
 
 ## To-Do:
 
