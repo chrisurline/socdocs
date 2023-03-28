@@ -15,7 +15,7 @@ Goal is to create a CLI tool for SOC analysts that will assist with organizing n
 
 - More threat intel sources and query options 
 - Ability to run IOCs against multiple sources at once
-- Secure API key storage so it wont need to be provided each time the user wants to run a query
 - Functionality to take the response from TI sources and save it in a format that is a bit more readable than raw JSON, etc.
 - Error handling and logging
+- Move API key storage to environment variables versus storing in constants.py
 - A lot more.....
