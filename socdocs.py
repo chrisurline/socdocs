@@ -11,47 +11,46 @@ URL_REGEX = r'(?:http(?:s?)://)?(?:[\w]+\.)+[a-zA-Z]+(?::\d{1,5})?'
 DOMAIN_REGEX = r'^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\/\n]+)'
 IPV4_REGEX = r'^(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)(?:\.(?!$)|$)){4}$'
 
-def create_empty_file(filepath, filename):
-    """ Create an empty file at the specified filepath """
-    with open(f'{filepath}/{filename}', 'w') as f:
+def create_empty_file(file_path, file_name):
+    """ Create an empty file at the specified file path """
+    with open(f'{file_path}/{file_name}', 'w') as f:
         pass
 
-def ioc_search(ioc, querytype):
+def ioc_search(ioc, query_type):
 
     virustotal_api_key = config['API_KEYS']['virustotal']
     metadefender_api_key = config['API_KEYS']['metadefender']
 
     """ VirusTotal """
     if virustotal_api_key:
-        match querytype:
+        match query_type:
             case 'domain':
-                queryvar = '/domains/'
+                query_type = '/domains/'
             case 'ip':
-                queryvar = '/ip_addresses/'
+                query_type = '/ip_addresses/'
             case 'hash':
-                queryvar = '/files/'
+                query_type = '/files/'
         
-        vtapiquery = f'https://www.virustotal.com/api/v3/{queryvar}/{ioc}'
-        vtapiheaders = {"accept": "application/json", "x-apikey": virustotal_api_key}
-        vtreport = requests.request("GET", vtapiquery, headers=vtapiheaders)
-        with open(f'{currentpath}/VirusTotal-report_{ioc}.txt', 'w') as vtreportfile:
-            #vtreportfile.write(json.dumps(vtreport), indent=4)
-            vtreportfile.write(str(vtreport.text))
+        vt_query = f'https://www.virustotal.com/api/v3/{query_type}/{ioc}'
+        vt_api_headers = {"accept": "application/json", "x-apikey": virustotal_api_key}
+        vt_report = requests.request("GET", vt_query, headers=vt_api_headers)
+        with open(f'{current_path}/VirusTotal-report_{ioc}.txt', 'w') as vt_reportfile:
+            vt_reportfile.write(str(vt_report.text))
     
     """ MetaDefender """
     if metadefender_api_key:
-        mdapiquery = f'https://api.metadefender.com/v4/{querytype}/{ioc}'
-        mdapiheaders = {'apikey': metadefender_api_key}
-        mdreport = requests.request("GET", mdapiquery, headers=mdapiheaders)
-        with open(f'{currentpath}/MetaDefender-report_{ioc}.txt', 'w') as mdreportfile:
-            mdreportfile.write(str(mdreport.text))
+        md_query = f'https://api.metadefender.com/v4/{query_type}/{ioc}'
+        md_api_headers = {'apikey': metadefender_api_key}
+        md_report = requests.request("GET", md_query, headers=md_api_headers)
+        with open(f'{current_path}/MetaDefender-report_{ioc}.txt', 'w') as md_reportfile:
+            md_reportfile.write(str(md_report.text))
 
     """ Censys Search (IP Only) """
-    if querytype == 'ip':
-        censysinstance = CensysHosts()
-        censysreport = censysinstance.view(ioc)
-        with open(f'{currentpath}/Censys-report_{ioc}.txt', 'w') as censysreportfile:
-            censysreportfile.write(str(censysreport))
+    if query_type == 'ip':
+        censys_instance = CensysHosts()
+        censys_report = censys_instance.view(ioc)
+        with open(f'{current_path}/Censys-report_{ioc}.txt', 'w') as censys_report_file:
+            censys_report_file.write(str(censys_report))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -66,20 +65,20 @@ if __name__ == "__main__":
     config = configparser.ConfigParser()
     config.read_file(args.config)
 
-    docpath = config['ARGUMENTS']['docpath']
+    doc_path = config['ARGUMENTS']['doc_path']
 
-    formatdate = date.today().strftime(config['ARGUMENTS']['dateformat'])
-    datepath = f'{docpath}{formatdate}'
+    dir_structure = date.today().strftime(config['ARGUMENTS']['date_format'])
+    date_path = f'{doc_path}{dir_structure}'
     
-    if os.path.exists(docpath):
-        pathlib.Path(datepath).mkdir(parents=True, exist_ok=True)
-        create_empty_file(datepath, '/Scratchpad.md') # Create file to store notes specific to the day
+    if os.path.exists(doc_path):
+        pathlib.Path(date_path).mkdir(parents=True, exist_ok=True)
+        create_empty_file(date_path, '/Scratchpad.md') # Create file to store notes specific to the day
 
     if args.eventid:
-        currentpath = os.path.join(datepath, args.eventid)
-        pathlib.Path(currentpath).mkdir(parents=True, exist_ok=True)
+        current_path = os.path.join(date_path, args.eventid)
+        pathlib.Path(current_path).mkdir(parents=True, exist_ok=True)
     else:
-        currentpath = datepath
+        current_path = date_path
 
     # determine if query is hash, IP or url/domain
     if args.query:
