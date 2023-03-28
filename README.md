@@ -7,9 +7,10 @@ Goal is to create a CLI tool for SOC analysts that will assist with organizing n
 ## How to Use:
 
 1. Update path in config.ini to point to a directory that will store documentation. 
-2. Run using `python3 socdocs.py`
-3. When the script is executed it will create a folder structure under this directory organized by year > month > day. 
-4. Currently only has VT API for hash searches. This can be executed using the `-query` + `--vtapikey` arguments. At the moment this will save a text document containing a report from VT in JSON format. 
+2. Add TI source API keys to constants.py
+3. Run using `python3 socdocs.py`
+4. When the script is executed it will create a folder structure under this directory organized by year > month > day. 
+5. File hash searches can be executed using `python3 socdocs.py -q [FILEHASH]`
 
 ## To-Do:
 
