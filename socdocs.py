@@ -3,11 +3,8 @@ import configparser
 import argparse
 import os
 import pathlib
-import vt
 import requests
 import re
-import json
-from constants import virustotal_api_key, metadefender_api_key
 
 URL_REGEX = r'(?:http(?:s?)://)?(?:[\w]+\.)+[a-zA-Z]+(?::\d{1,5})?'
 DOMAIN_REGEX = r'^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\/\n]+)'
@@ -24,32 +21,30 @@ def ioc_search(ioc, querytype):
     metadefender_api_key = config['API_KEYS']['metadefender']
 
     if virustotal_api_key:
-        with vt.Client(virustotal_api_key) as client:
-            match querytype:
-                case 'domain':
-                    queryvar = '/domains/'
-                case 'ip':
-                    queryvar = '/ip_addresses/'
-                case 'hash':
-                    queryvar = '/files/'
-            vtreport = client.get_json(queryvar + ioc)
-
-            with open(f'{currentpath}/VirusTotal-report_{ioc}.txt', 'w') as vtreportfile:
-                vtreportfile.write(json.dumps(vtreport, indent=4))
-            print(vtreport)
-
+        match querytype:
+            case 'domain':
+                queryvar = '/domains/'
+            case 'ip':
+                queryvar = '/ip_addresses/'
+            case 'hash':
+                queryvar = '/files/'
+        
+        vtapiquery = f'https://www.virustotal.com/api/v3/{queryvar}/{ioc}'
+        vtapiheaders = {"accept": "application/json", "x-apikey": virustotal_api_key}
+        vtreport = requests.request("GET", vtapiquery, headers=vtapiheaders)
+        with open(f'{currentpath}/VirusTotal-report_{ioc}.txt', 'w') as vtreportfile:
+            #vtreportfile.write(json.dumps(vtreport), indent=4)
+            vtreportfile.write(str(vtreport.text))
+            
     if metadefender_api_key:
         mdapiquery = f'https://api.metadefender.com/v4/{querytype}/{ioc}'
-        mdheaders = {'apikey': metadefender_api_key}
-        mdreport = requests.request("GET", mdapiquery, headers=mdheaders)
+        mdapiheaders = {'apikey': metadefender_api_key}
+        mdreport = requests.request("GET", mdapiquery, headers=mdapiheaders)
         with open(f'{currentpath}/MetaDefender-report_{ioc}.txt', 'w') as mdreportfile:
             mdreportfile.write(str(mdreport.text))
-        print(mdreport.text)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--filename', '-f', type=str, 
-                        help='''create a file in todays directory''', default=False)
     parser.add_argument('--query', '-q', type=str, 
                         help='''execute IOC search and add report to todays folder''', default=False)
     parser.add_argument('--config','-c', type=argparse.FileType('r'),
