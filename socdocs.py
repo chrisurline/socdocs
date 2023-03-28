@@ -13,11 +13,16 @@ URL_REGEX = r'(?:http(?:s?)://)?(?:[\w]+\.)+[a-zA-Z]+(?::\d{1,5})?'
 DOMAIN_REGEX = r'^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\/\n]+)'
 IPV4_REGEX = r'^(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)(?:\.(?!$)|$)){4}$'
 
-def make_file(filepath, filename):
+def create_empty_file(filepath, filename):
+    """ Create an empty file at the specified filepath """
     with open(f'{filepath}/{filename}', 'w') as f:
         pass
 
 def ioc_search(ioc, querytype):
+
+    virustotal_api_key = config['API_KEYS']['virustotal']
+    metadefender_api_key = config['API_KEYS']['metadefender']
+
     if virustotal_api_key:
         with vt.Client(virustotal_api_key) as client:
             match querytype:
@@ -63,16 +68,13 @@ if __name__ == "__main__":
     
     if os.path.exists(docpath):
         pathlib.Path(datepath).mkdir(parents=True, exist_ok=True)
-        make_file(datepath, '/Scratchpad.md') # Create file to store notes specific to the day
-    
+        create_empty_file(datepath, '/Scratchpad.md') # Create file to store notes specific to the day
+
     if args.eventid:
         currentpath = os.path.join(datepath, args.eventid)
         pathlib.Path(currentpath).mkdir(parents=True, exist_ok=True)
     else:
         currentpath = datepath
-
-    if args.filename:
-        make_file(currentpath, f'/{args.filename}')
 
     # determine if query is hash, IP or url/domain
     if args.query:
