@@ -22,35 +22,53 @@ def ioc_search(ioc, query_type):
     metadefender_api_key = config['API_KEYS']['metadefender']
 
     """ VirusTotal """
-    if virustotal_api_key:
-        match query_type:
-            case 'domain':
-                query_type = '/domains/'
-            case 'ip':
-                query_type = '/ip_addresses/'
-            case 'hash':
-                query_type = '/files/'
-        
-        vt_query = f'https://www.virustotal.com/api/v3/{query_type}/{ioc}'
-        vt_api_headers = {"accept": "application/json", "x-apikey": virustotal_api_key}
-        vt_report = requests.request("GET", vt_query, headers=vt_api_headers)
-        with open(f'{current_path}/VirusTotal-report_{ioc}.txt', 'w') as vt_reportfile:
-            vt_reportfile.write(str(vt_report.text))
+    try:
+        if virustotal_api_key:
+            match query_type:
+                case 'domain':
+                    query_type = '/domains/'
+                case 'ip':
+                    query_type = '/ip_addresses/'
+                case 'hash':
+                    query_type = '/files/'
+            
+            vt_query = f'https://www.virustotal.com/api/v3/{query_type}/{ioc}'
+            vt_api_headers = {"accept": "application/json", "x-apikey": virustotal_api_key}
+            vt_report = requests.request("GET", vt_query, headers=vt_api_headers)
+            vt_report.raise_for_status()
+            with open(f'{current_path}/VirusTotal-report_{ioc}.txt', 'w') as vt_reportfile:
+                vt_reportfile.write(str(vt_report.text))
+        else:
+            print('VirusTotal API key is missing or invalid')
+    except requests.exceptions.HTTPError as err:
+        print(f'VirusTotal API error: {err}')
+    except requests.exceptions.RequestException as err:
+        print(f'VirusTotal API request error: {err}')
     
     """ MetaDefender """
-    if metadefender_api_key:
-        md_query = f'https://api.metadefender.com/v4/{query_type}/{ioc}'
-        md_api_headers = {'apikey': metadefender_api_key}
-        md_report = requests.request("GET", md_query, headers=md_api_headers)
-        with open(f'{current_path}/MetaDefender-report_{ioc}.txt', 'w') as md_reportfile:
-            md_reportfile.write(str(md_report.text))
+    try:
+        if metadefender_api_key:
+            md_query = f'https://api.metadefender.com/v4/{query_type}/{ioc}'
+            md_api_headers = {'apikey': metadefender_api_key}
+            md_report = requests.request("GET", md_query, headers=md_api_headers)
+            with open(f'{current_path}/MetaDefender-report_{ioc}.txt', 'w') as md_reportfile:
+                md_reportfile.write(str(md_report.text))
+        else:
+            print('MetaDefender API key is missing or invalid.')
+    except requests.exceptions.HTTPError as err:
+        print(f'MetaDefender API error: {err}')
+    except requests.exceptions.RequestException as err:
+        print(f'MetaDefender API request error: {err}')
 
     """ Censys Search (IP Only) """
     if query_type == 'ip':
         censys_instance = CensysHosts()
-        censys_report = censys_instance.view(ioc)
-        with open(f'{current_path}/Censys-report_{ioc}.txt', 'w') as censys_report_file:
-            censys_report_file.write(str(censys_report))
+        try:
+            censys_report = censys_instance.view(ioc)
+            with open(f'{current_path}/Censys-report_{ioc}.txt', 'w') as censys_report_file:
+                censys_report_file.write(str(censys_report))
+        except CensysException as err:
+            print(f'Censys API error: {err}')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
