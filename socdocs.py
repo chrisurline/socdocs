@@ -1,5 +1,3 @@
-# 03-20-2023 - Chris Surline
-
 from datetime import date
 import configparser
 import argparse
