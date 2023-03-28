@@ -5,6 +5,7 @@ import os
 import pathlib
 import requests
 import re
+from censys.search import CensysHosts
 
 URL_REGEX = r'(?:http(?:s?)://)?(?:[\w]+\.)+[a-zA-Z]+(?::\d{1,5})?'
 DOMAIN_REGEX = r'^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\/\n]+)'
@@ -20,6 +21,7 @@ def ioc_search(ioc, querytype):
     virustotal_api_key = config['API_KEYS']['virustotal']
     metadefender_api_key = config['API_KEYS']['metadefender']
 
+    """ VirusTotal """
     if virustotal_api_key:
         match querytype:
             case 'domain':
@@ -35,13 +37,21 @@ def ioc_search(ioc, querytype):
         with open(f'{currentpath}/VirusTotal-report_{ioc}.txt', 'w') as vtreportfile:
             #vtreportfile.write(json.dumps(vtreport), indent=4)
             vtreportfile.write(str(vtreport.text))
-            
+    
+    """ MetaDefender """
     if metadefender_api_key:
         mdapiquery = f'https://api.metadefender.com/v4/{querytype}/{ioc}'
         mdapiheaders = {'apikey': metadefender_api_key}
         mdreport = requests.request("GET", mdapiquery, headers=mdapiheaders)
         with open(f'{currentpath}/MetaDefender-report_{ioc}.txt', 'w') as mdreportfile:
             mdreportfile.write(str(mdreport.text))
+
+    """ Censys Search (IP Only) """
+    if querytype == 'ip':
+        censysinstance = CensysHosts()
+        censysreport = censysinstance.view(ioc)
+        with open(f'{currentpath}/Censys-report_{ioc}.txt', 'w') as censysreportfile:
+            censysreportfile.write(str(censysreport))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
