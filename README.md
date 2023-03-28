@@ -2,7 +2,7 @@
 
 ## Overview:
 
-Goal is to create a CLI tool for SOC analysts that will assist with organizing notes and supporting documentation for each investigation. 
+Goal is to create a tool for SOC analysts that will assist with organizing notes and supporting documentation for each investigation. 
 
 ## How to Use:
 
