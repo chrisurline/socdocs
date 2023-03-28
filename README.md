@@ -18,7 +18,7 @@ Goal is to create a tool for SOC analysts that will assist with organizing notes
 
 - VirusTotal
 - MetaDefender
-- Censys Search
+- Censys Search (IP Addresses Only)
 
 ## To-Do:
 
