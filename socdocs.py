@@ -6,12 +6,12 @@ import pathlib
 import vt
 import requests
 import re
+import json
 from constants import virustotal_api_key, metadefender_api_key
 
 def make_file(filepath, filename):
-    newfile = filepath + filename
-    if not os.path.exists(newfile):
-        open(newfile, 'x')
+    with open(f'{filepath}/{filename}', 'w') as f:
+        pass
 
 def ioc_search(ioc, querytype):
     if virustotal_api_key:
@@ -24,18 +24,17 @@ def ioc_search(ioc, querytype):
                 case 'hash':
                     queryvar = '/files/'
             vtreport = client.get_json(queryvar + ioc)
-            vtreportfile = open(currentpath + '/VirusTotal-report_' + ioc + '.txt', 'w')
-            vtreportfile.write(str(vtreport))
-            vtreportfile.close()
+
+            with open(f'{currentpath}/VirusTotal-report_{ioc}.txt', 'w') as vtreportfile:
+                vtreportfile.write(json.dumps(vtreport, indent=4))
             print(vtreport)
 
     if metadefender_api_key:
-        mdapiquery = 'https://api.metadefender.com/v4/' + querytype + '/' + ioc
+        mdapiquery = f'https://api.metadefender.com/v4/{querytype}/{ioc}'
         mdheaders = {'apikey': metadefender_api_key}
         mdreport = requests.request("GET", mdapiquery, headers=mdheaders)
-        mdreportfile = open(currentpath + '/MetaDefender-report_' + ioc + '.txt', 'w')
-        mdreportfile.write(str(mdreport.text))
-        mdreportfile.close()
+        with open(f'{currentpath}/MetaDefender-report_{ioc}.txt', 'w') as mdreportfile:
+            mdreportfile.write(str(mdreport.text))
         print(mdreport.text)
 
 if __name__ == "__main__":
