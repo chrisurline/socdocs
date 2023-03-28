@@ -6,7 +6,7 @@ Goal is to create a CLI tool for SOC analysts that will assist with organizing n
 
 ## How to Use:
 
-- Update path where you'd like to store documentation/files and API keys in `**config.ini**`. 
+- Update path where you'd like to store documentation/files and API keys in **`config.ini`**. 
 - Run using `python3 socdocs.py`
 - When the script is executed it will create a folder structure under the specified directory, organized by year > month > day. 
 - File hash, domain, and IP searches can be executed using `python3 socdocs.py -q [QUERY HERE]`
@@ -24,5 +24,5 @@ Goal is to create a CLI tool for SOC analysts that will assist with organizing n
 - Ability to run IOCs against multiple sources at once
 - Functionality to take the response from TI sources and save it in a format that is a bit more readable than raw JSON, etc.
 - Error handling and logging
-- Move API key storage to environment variables(?)
+- Move API key storage to environment variables versus storing in constants.py
 - A lot more.....
