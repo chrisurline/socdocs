@@ -9,6 +9,10 @@ import re
 import json
 from constants import virustotal_api_key, metadefender_api_key
 
+URL_REGEX = r'(?:http(?:s?)://)?(?:[\w]+\.)+[a-zA-Z]+(?::\d{1,5})?'
+DOMAIN_REGEX = r'^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\/\n]+)'
+IPV4_REGEX = r'^(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)(?:\.(?!$)|$)){4}$'
+
 def make_file(filepath, filename):
     with open(f'{filepath}/{filename}', 'w') as f:
         pass
@@ -40,42 +44,43 @@ def ioc_search(ioc, querytype):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--filename', '-f', type=str, 
-                        help='create a file in todays directory', default=False)
+                        help='''create a file in todays directory''', default=False)
     parser.add_argument('--query', '-q', type=str, 
-                        help='execute IOC search and add report to todays folder', default=False)
+                        help='''execute IOC search and add report to todays folder''', default=False)
     parser.add_argument('--config','-c', type=argparse.FileType('r'),
-                        help='specify configuration file', default='config.ini')
+                        help='''specify configuration file''', default='config.ini')
     parser.add_argument('--eventid', '-id', type=str, 
-                        help='specify an event ID', default=False)
+                        help='''specify an event ID''', default=False)
     args = parser.parse_args()
 
     config = configparser.ConfigParser()
     config.read_file(args.config)
 
     docpath = config['ARGUMENTS']['docpath']
-    datepath = docpath + date.today().strftime(config['ARGUMENTS']['dateformat'])
+
+    formatdate = date.today().strftime(config['ARGUMENTS']['dateformat'])
+    datepath = f'{docpath}{formatdate}'
     
     if os.path.exists(docpath):
         pathlib.Path(datepath).mkdir(parents=True, exist_ok=True)
         make_file(datepath, '/Scratchpad.md') # Create file to store notes specific to the day
     
-    currentpath = datepath
-
     if args.eventid:
-        currentpath = datepath + '/' +  args.eventid
-        if os.path.exists(datepath):
-            pathlib.Path(currentpath).mkdir(parents=True, exist_ok=True)
+        currentpath = os.path.join(datepath, args.eventid)
+        pathlib.Path(currentpath).mkdir(parents=True, exist_ok=True)
+    else:
+        currentpath = datepath
 
     if args.filename:
-        make_file(currentpath, '/' + args.filename)
+        make_file(currentpath, f'/{args.filename}')
 
     # determine if query is hash, IP or url/domain
     if args.query:
-        if re.match("(?:http(?:s?)://)?(?:[\w]+\.)+[a-zA-Z]+(?::\d{1,5})?", args.query): # check if url/domain
+        if re.match(URL_REGEX, args.query): # check if url/domain
             # extract domain (includes subdomains if applicable)
-            domain = re.search('^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\/\n]+)', args.query)
+            domain = re.search(DOMAIN_REGEX, args.query)
             ioc_search(domain.group(1), 'domain')
-        elif re.match("^(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)(?:\.(?!$)|$)){4}$", args.query): # check if IPv4 address
+        elif re.match(IPV4_REGEX, args.query): # check if IPv4 address
             ioc_search(args.query, 'ip')
         else: # if not everything else than try searching as a file hash 
             ioc_search(args.query, 'hash')
